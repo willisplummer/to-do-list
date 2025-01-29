@@ -25,6 +25,11 @@ pub fn build(b: *std.Build) void {
     const raygui = raylib_dep.module("raygui"); // raygui module
     const raylib_artifact = raylib_dep.artifact("raylib"); // raylib C library
 
+    const zclay_dep = b.dependency("zclay", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const lib = b.addStaticLibrary(.{
         .name = "todolist",
         // In this case the main source file is merely a path, however, in more
@@ -47,6 +52,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.linkLibrary(raylib_artifact);
+    exe.root_module.addImport("zclay", zclay_dep.module("zclay"));
     exe.root_module.addImport("raylib", raylib);
     exe.root_module.addImport("raygui", raygui);
 

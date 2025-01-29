@@ -35,10 +35,10 @@ pub fn main() anyerror!void {
             showMessageBox = true;
         }
         if (showMessageBox) {
-            const result = gui.guiMessageBox((rl.Rectangle){ .x = 24, .y = 50, .width = 120, .height = 80 }, "Message Box", "This is a message!", "Nice;Cool");
+            const result = gui.guiMessageBox((rl.Rectangle){ .x = 24, .y = 100, .width = 120, .height = 80 }, "Message Box", "This is a message!", "Nice;Cool");
 
-            // NOTE: if you click the left button, result is 1; right is 2
-            if (result > 0) {
+            // NOTE: close = 0; left button = 1; right button = 2; default = -1
+            if (result >= 0) {
                 std.debug.print("result {d}\n", .{result});
                 showMessageBox = false;
             }
