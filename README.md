@@ -1,8 +1,10 @@
 # Zig Todo List
-learning as i go
+
+using [ raylib-zig ](https://github.com/Not-Nik/raylib-zig) for the interface.
+*Note:* may need to run `zig fetch --save git+https://github.com/Not-Nik/raylib-zig#devel` to get this to build on another machine
 
 todo:
-- [ ] setup raylib https://github.com/Not-Nik/raylib-zig
+- [x] setup raylib
 - [ ] basic ui for creating a todo
 - [ ] format timestamps as dates (01/01/91 e.g)
 - [ ] check off a todo
