@@ -33,23 +33,16 @@ pub fn main() anyerror!void {
     _ = cl.initialize(arena, .{ .h = @floatFromInt(rl.getScreenHeight()), .w = @floatFromInt(rl.getScreenWidth()) }, .{});
     cl.setMeasureTextFunction(renderer.measureText);
 
-    // TODO: use ArrayList
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var todoAllocator = gpa.allocator();
+    const toDoAllocator = gpa.allocator();
     defer {
         _ = gpa.deinit();
     }
-
-    const dynamic_size: usize = 10; //10 strings in the array to start
-    var toDos = try todoAllocator.alloc(ToDo, dynamic_size); //allocate a slice of strings
-    // TODO: it seems like this manipulation of len is causing an error when the deferred `free` runs
-    // I'm getting error allocation size 560 (10 * 56 - dynamic_size) bytes does not match free size 56 (1 * 56 - final len).
-    toDos.len = 0;
-    defer todoAllocator.free(toDos);
-
-    const f = "first";
-    toDos.len = 1;
-    toDos[0] = mkToDo(f);
+    var toDos = std.ArrayList(ToDo).init(toDoAllocator);
+    defer toDos.deinit();
+    try toDos.append(mkToDo("First To-Do"));
+    try toDos.append(mkToDo("Second To-Do"));
+    try toDos.append(mkToDo("Third To-Do"));
 
     var debug_mode_enabled = false;
     while (!rl.windowShouldClose()) {
@@ -76,7 +69,7 @@ pub fn main() anyerror!void {
             .h = @floatFromInt(rl.getScreenHeight()),
         });
 
-        var render_commands = layout.createLayout(toDos);
+        var render_commands = layout.createLayout(toDos.items);
 
         // Draw
         //----------------------------------------------------------------------------------

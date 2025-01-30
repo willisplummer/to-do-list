@@ -11,6 +11,7 @@ const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };
 const orange: cl.Color = .{ 225, 138, 50, 255 };
 const white: cl.Color = .{ 250, 250, 255, 255 };
+const green: cl.Color = .{ 46, 204, 113, 255 };
 
 const sidebar_item_layout: cl.LayoutConfig = .{
     .sizing = .{ .w = .grow, .h = .fixed(50) },
@@ -24,6 +25,8 @@ fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerD
         // TODO: mark the todo at index in elementId completed
         _ = userData;
         _ = elementId;
+        // tbd how we get a ref to the arraylist in here but it will be something like
+        // toDos.orderedRemove or toDos.swapRemove which is more performant if we don't care about preserving the order
     }
 }
 
@@ -40,7 +43,7 @@ fn buttonComponent(text: StaticString) void {
     cl.UI(&.{
         .ID("Button"),
         .layout(sidebar_item_layout),
-        .rectangle(.{ .color = red }),
+        .rectangle(.{ .color = green }),
     })({
         cl.text(text, .text(textConfig));
     });
@@ -72,12 +75,13 @@ pub fn createLayout(toDos: []ToDo) cl.ClayArray(cl.RenderCommand) {
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
                 .rectangle(.{ .color = red }),
             })({
-                cl.text("ToDo List Application", .text(textConfig));
+                cl.text("To-Do List Application", .text(textConfig));
             });
 
             for (toDos, 0..) |elem, i| toDoItemComponent(i, elem);
 
-            buttonComponent("New ToDo");
+            cl.UI(&.{.layout(.{ .sizing = .{ .h = .grow } })})({});
+            buttonComponent("Add New To-Do");
         });
     });
     return cl.endLayout();
