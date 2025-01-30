@@ -3,6 +3,9 @@ const rl = @import("raylib");
 const gui = @import("raygui");
 const cl = @import("zclay");
 const renderer = @import("render-clay.zig");
+const ToDo = @import("ToDo.zig").ToDo;
+const mkToDo = @import("ToDo.zig").mkToDo;
+const StaticString = @import("StaticString.zig").StaticString;
 
 const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };
@@ -12,16 +15,17 @@ const white: cl.Color = .{ 250, 250, 255, 255 };
 const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
 // Re-useable components are just normal functions
-fn sidebarItemComponent(index: usize) void {
+fn toDoItemComponent(index: usize, toDo: ToDo) void {
     cl.UI(&.{
-        .IDI("SidebarBlob", @intCast(index)),
+        .IDI("ToDoItem", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
-    })({});
+    })({
+        cl.text(toDo.task, .text(.{ .font_size = 24, .color = light_grey }));
+    });
 }
 
-// An example function to begin the "root" of your layout tree
-fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
+fn createLayout(toDos: []ToDo) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
     cl.UI(&.{
         .ID("OuterContainer"),
@@ -29,10 +33,10 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
         .rectangle(.{ .color = white }),
     })({
         cl.UI(&.{
-            .ID("SideBar"),
+            .ID("ToDos"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
-                .sizing = .{ .h = .grow, .w = .fixed(300) },
+                .sizing = .{ .h = .grow, .w = .grow },
                 .padding = .all(16),
                 .child_alignment = .{ .x = .CENTER, .y = .TOP },
                 .child_gap = 16,
@@ -40,27 +44,14 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             .rectangle(.{ .color = light_grey }),
         })({
             cl.UI(&.{
-                .ID("ProfilePictureOuter"),
+                .ID("Header Outer"),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
                 .rectangle(.{ .color = red }),
             })({
-                cl.UI(&.{
-                    .ID("ProfilePicture"),
-                    .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
-                    .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
-                })({});
-                cl.text("Clay - UI Library", .text(.{ .font_size = 24, .color = light_grey }));
+                cl.text("ToDo List Application", .text(.{ .font_size = 24, .color = light_grey }));
             });
 
-            for (0..5) |i| sidebarItemComponent(i);
-        });
-
-        cl.UI(&.{
-            .ID("MainContent"),
-            .layout(.{ .sizing = .grow }),
-            .rectangle(.{ .color = light_grey }),
-        })({
-            //...
+            for (toDos, 0..) |elem, i| toDoItemComponent(i, elem);
         });
     });
     return cl.endLayout();
@@ -89,16 +80,28 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60); // Set our game to run at 60 frames-per-second
 
     loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 24);
-    const profile_picture = loadImage("./resources/profile-picture.png");
     //--------------------------------------------------------------------------------------
 
-    const allocator = std.heap.page_allocator;
+    const clayAllocator = std.heap.page_allocator;
     const min_memory_size: u32 = cl.minMemorySize();
-    const memory = try allocator.alloc(u8, min_memory_size);
-    defer allocator.free(memory);
+    const memory = try clayAllocator.alloc(u8, min_memory_size);
+    defer clayAllocator.free(memory);
     const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
     _ = cl.initialize(arena, .{ .h = @floatFromInt(rl.getScreenHeight()), .w = @floatFromInt(rl.getScreenWidth()) }, .{});
     cl.setMeasureTextFunction(renderer.measureText);
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var todoAllocator = gpa.allocator();
+    defer {
+        _ = gpa.deinit();
+    }
+
+    const dynamic_size: usize = 10; //10 strings in the array to start
+    const toDos = try todoAllocator.alloc(ToDo, dynamic_size); //allocate a slice of strings
+    defer todoAllocator.free(toDos);
+
+    const f = "first";
+    toDos[0] = mkToDo(f);
 
     // var showMessageBox: bool = false;
     // Main game loop
@@ -109,7 +112,8 @@ pub fn main() anyerror!void {
             .w = @floatFromInt(rl.getScreenWidth()),
             .h = @floatFromInt(rl.getScreenHeight()),
         });
-        var render_commands = createLayout(&profile_picture);
+        // TODO: figure out a better way to only render the populated section of the slice
+        var render_commands = createLayout(toDos[0..1]);
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -133,7 +137,7 @@ pub fn main() anyerror!void {
         //     }
         // }
 
-        renderer.clayRaylibRender(&render_commands, allocator);
+        renderer.clayRaylibRender(&render_commands, clayAllocator);
         //----------------------------------------------------------------------------------
     }
 }
