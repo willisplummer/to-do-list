@@ -68,6 +68,7 @@ pub fn main() anyerror!void {
             .w = @floatFromInt(rl.getScreenWidth()),
             .h = @floatFromInt(rl.getScreenHeight()),
         });
+        // if (rl.isMouseButtonDown(rl.MouseButton.left) and cl.pointerOver(cl.id(""))) {}
 
         var render_commands = layout.createLayout(toDos.items);
 

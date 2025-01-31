@@ -28,9 +28,12 @@
             .hash = "12207f719c1fa181d79ff174f476281e6b13610e4430d8e5b8453b43d6e62712b45f",
         },
         .zclay = .{
-            .url = "https://github.com/johan0A/clay-zig-bindings/archive/aabbf2c66e24a8fd06af72bd684e50f8f3b15d13.tar.gz",
-            .hash = "1220a2e4de26ec00c45f8926c37990c07920df22be29ee3a8ce6255139fe515b0922",
+            .path = "../clay-zig-bindings",
         },
+        // .zclay = .{
+        //     .url = "https://github.com/johan0A/clay-zig-bindings/archive/aabbf2c66e24a8fd06af72bd684e50f8f3b15d13.tar.gz",
+        //     .hash = "1220a2e4de26ec00c45f8926c37990c07920df22be29ee3a8ce6255139fe515b0922",
+        // },
     },
     .paths = .{
         "build.zig",

@@ -20,21 +20,23 @@ const sidebar_item_layout: cl.LayoutConfig = .{
 const textConfig: cl.TextElementConfig = .{ .font_size = 24, .color = light_grey };
 
 // note userData is the index that we pass through in the onHover callback
-fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerData, userData: isize) void {
-    if (pointerData.state == .pressed_this_frame) {
-        // TODO: mark the todo at index in elementId completed
-        _ = userData;
-        _ = elementId;
-        // tbd how we get a ref to the arraylist in here but it will be something like
-        // toDos.orderedRemove or toDos.swapRemove which is more performant if we don't care about preserving the order
-    }
+fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerData, userData: isize) callconv(.c) void {
+    _ = userData;
+    _ = elementId;
+    _ = pointerData;
+    std.debug.print("handle hover {s}", .{"testing"});
+    // if (pointerData.state == .pressed_this_frame) {
+    //     // TODO: mark the todo at index in elementId completed
+    //     // tbd how we get a ref to the arraylist in here but it will be something like
+    //     // toDos.orderedRemove or toDos.swapRemove which is more performant if we don't care about preserving the order
+    // }
 }
 
 fn toDoItemComponent(index: usize, toDo: ToDo) void {
     cl.UI(&.{
         .IDI("ToDoItem", @intCast(index)), .layout(sidebar_item_layout), .rectangle(.{ .color = orange }),
-        // cl.onHover(HandleToDoButtonInteraction, index)
     })({
+        cl.cdefs.Clay_OnHover(HandleToDoButtonInteraction, @intCast(index));
         cl.text(toDo.task, .text(textConfig));
     });
 }
