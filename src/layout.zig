@@ -7,7 +7,6 @@ const renderer = @import("render-clay.zig");
 const ToDo = @import("ToDo.zig").ToDo;
 const mkToDo = @import("ToDo.zig").mkToDo;
 const StaticString = @import("StaticString.zig").StaticString;
-const onHover = @import("clay-on-hover.zig").onHover;
 
 const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };
@@ -50,7 +49,7 @@ fn toDoItemComponent(index: usize, toDo: ToDo, todos: []ToDo) void {
         .layout(sidebar_item_layout),
         .rectangle(rectangle_data),
     })({
-        onHover(ClickData, &hover_data, HandleToDoButtonInteraction);
+        cl.onHover(ClickData, &hover_data, HandleToDoButtonInteraction);
         cl.text(toDo.task, .text(textConfig));
     });
 }
