@@ -1,4 +1,5 @@
 const std = @import("std");
+const timestamp = std.time.timestamp;
 const rl = @import("raylib");
 const gui = @import("raygui");
 const cl = @import("zclay");
@@ -6,37 +7,50 @@ const renderer = @import("render-clay.zig");
 const ToDo = @import("ToDo.zig").ToDo;
 const mkToDo = @import("ToDo.zig").mkToDo;
 const StaticString = @import("StaticString.zig").StaticString;
+const onHover = @import("clay-on-hover.zig").onHover;
 
 const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };
 const orange: cl.Color = .{ 225, 138, 50, 255 };
 const white: cl.Color = .{ 250, 250, 255, 255 };
 const green: cl.Color = .{ 46, 204, 113, 255 };
+const yellow: cl.Color = .{ 255, 255, 0, 255 };
 
 const sidebar_item_layout: cl.LayoutConfig = .{
     .sizing = .{ .w = .grow, .h = .fixed(50) },
     .padding = .all(16),
 };
 const textConfig: cl.TextElementConfig = .{ .font_size = 24, .color = light_grey };
-
-// note userData is the index that we pass through in the onHover callback
-fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerData, userData: isize) callconv(.c) void {
-    _ = userData;
-    _ = elementId;
-    _ = pointerData;
-    std.debug.print("handle hover {s}", .{"testing"});
-    // if (pointerData.state == .pressed_this_frame) {
-    //     // TODO: mark the todo at index in elementId completed
-    //     // tbd how we get a ref to the arraylist in here but it will be something like
-    //     // toDos.orderedRemove or toDos.swapRemove which is more performant if we don't care about preserving the order
-    // }
+const ClickData = struct { todos: ?[]ToDo };
+var hover_data: ClickData = .{ .todos = null };
+inline fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerData, userData: *ClickData) void {
+    if (pointerData.state == .pressed_this_frame) {
+        if (userData.todos) |todos| {
+            todos[elementId.offset].completedAt = timestamp();
+            // NOTE: the following doesn't work because apparently todo
+            // is a copy and not a reference to the index of the slice?
+            // var todo = todos[elementId.offset];
+            // std.debug.print("ToDo: {s}\n", .{todo.task});
+            // todo.completedAt = timestamp();
+        } else {
+            std.debug.print("todos was not set", .{});
+        }
+    }
 }
 
-fn toDoItemComponent(index: usize, toDo: ToDo) void {
+fn toDoItemComponent(index: usize, toDo: ToDo, todos: []ToDo) void {
+    hover_data.todos = todos;
+    // NOTE: didn't work calling out to cl.cdefs.Clay_Hovered();
+    const rectangle_data: cl.RectangleElementConfig = if (toDo.completedAt != null)
+        .{ .color = yellow }
+    else
+        .{ .color = orange };
     cl.UI(&.{
-        .IDI("ToDoItem", @intCast(index)), .layout(sidebar_item_layout), .rectangle(.{ .color = orange }),
+        .IDI("ToDoItem", @intCast(index)),
+        .layout(sidebar_item_layout),
+        .rectangle(rectangle_data),
     })({
-        cl.cdefs.Clay_OnHover(HandleToDoButtonInteraction, @intCast(index));
+        onHover(ClickData, &hover_data, HandleToDoButtonInteraction);
         cl.text(toDo.task, .text(textConfig));
     });
 }
@@ -80,7 +94,7 @@ pub fn createLayout(toDos: []ToDo) cl.ClayArray(cl.RenderCommand) {
                 cl.text("To-Do List Application", .text(textConfig));
             });
 
-            for (toDos, 0..) |elem, i| toDoItemComponent(i, elem);
+            for (toDos, 0..) |elem, i| toDoItemComponent(i, elem, toDos);
 
             cl.UI(&.{.layout(.{ .sizing = .{ .h = .grow } })})({});
             buttonComponent("Add New To-Do");
