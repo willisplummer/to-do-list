@@ -17,39 +17,39 @@
     utils.lib.eachDefaultSystem (
       system:
       let
-        zig = inputs.zig-overlay.packages.x86_64-linux.master;
-        zls = inputs.zls-overlay.packages.x86_64-linux.zls.overrideAttrs (old: {
-          nativeBuildInputs = [ zig ];
-        });
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [
-            (final: prev: {
-              inherit zig;
-            })
-          ];
-        };
+        # zig = inputs.zig-overlay.packages.x86_64-linux.master;
+        # zls = inputs.zls-overlay.packages.x86_64-linux.zls.overrideAttrs (old: {
+        #   nativeBuildInputs = [ zig ];
+        # });
+        # pkgs = import nixpkgs {
+        #   inherit system;
+        #   overlays = [
+        #     (final: prev: {
+        #       inherit zig;
+        #     })
+        #   ];
+        # };
+        pkgs = import nixpkgs { inherit system; };
       in
       {
         devShell =
           with pkgs;
           mkShell {
             buildInputs = [
-              SDL2
-              pkg-config
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXrandr
-              xorg.libXinerama
-              xorg.libXi
-              xorg.libX11.dev
-              wayland
-              pulseaudioFull
-              unzip
-              libxkbcommon
-              glfw
-              zig
               zls
+              lldb
+              clang
+
+              # Raylib Deps
+              wayland.dev
+              libxkbcommon.dev
+
+              xorg.libX11.dev
+              xorg.libXi.dev
+              xorg.libXinerama.dev
+              xorg.libXrandr.dev
+              xorg.libXcursor.dev
+              libGL.dev
             ];
           };
       }

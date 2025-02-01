@@ -2,27 +2,27 @@ const std = @import("std");
 const timestamp = std.time.timestamp;
 const rl = @import("raylib");
 const gui = @import("raygui");
-const cl = @import("zclay");
+const clay = @import("clay");
 const renderer = @import("render-clay.zig");
 const ToDo = @import("ToDo.zig").ToDo;
 const mkToDo = @import("ToDo.zig").mkToDo;
 const StaticString = @import("StaticString.zig").StaticString;
 
-const light_grey: cl.Color = .{ 224, 215, 210, 255 };
-const red: cl.Color = .{ 168, 66, 28, 255 };
-const orange: cl.Color = .{ 225, 138, 50, 255 };
-const white: cl.Color = .{ 250, 250, 255, 255 };
-const green: cl.Color = .{ 46, 204, 113, 255 };
-const yellow: cl.Color = .{ 255, 255, 0, 255 };
+const light_grey: clay.Color = .{ .r = 224, .g = 215, .b = 210 };
+const red: clay.Color = .{ .r = 168, .g = 66, .b = 28 };
+const orange: clay.Color = .{ .r = 225, .g = 138, .b = 50 };
+const white: clay.Color = .{ .r = 250, .g = 250, .b = 255 };
+const green: clay.Color = .{ .r = 46, .g = 204, .b = 113 };
+const yellow: clay.Color = .{ .r = 255, .g = 255, .b = 0 };
 
-const sidebar_item_layout: cl.LayoutConfig = .{
-    .sizing = .{ .w = .grow, .h = .fixed(50) },
-    .padding = .all(16),
+const sidebar_item_layout: clay.Element.Config.Layout = .{
+    .sizing = .{ .width = clay.Element.Sizing.Axis.grow(.{}), .height = clay.Element.Sizing.Axis.fixed(50) },
+    .padding = clay.Padding.all(16),
 };
-const textConfig: cl.TextElementConfig = .{ .font_size = 24, .color = light_grey };
+const textConfig: clay.Element.Config.Text = .{ .font_size = 24, .color = light_grey };
 const ClickData = struct { todos: ?[]ToDo };
 var hover_data: ClickData = .{ .todos = null };
-inline fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.PointerData, userData: *ClickData) void {
+inline fn HandleToDoButtonInteraction(elementId: clay.Element.Config.Id, pointerData: clay.Pointer.Data, userData: *ClickData) void {
     if (pointerData.state == .pressed_this_frame) {
         if (userData.todos) |todos| {
             todos[elementId.offset].completedAt = timestamp();
@@ -40,66 +40,71 @@ inline fn HandleToDoButtonInteraction(elementId: cl.ElementId, pointerData: cl.P
 fn toDoItemComponent(index: usize, toDo: ToDo, todos: []ToDo) void {
     hover_data.todos = todos;
     // NOTE: didn't work calling out to cl.cdefs.Clay_Hovered();
-    const rectangle_data: cl.RectangleElementConfig = if (toDo.completedAt != null)
+    const rectangle_data: clay.Element.Config.Rectangle = if (toDo.completedAt != null)
         .{ .color = yellow }
     else
         .{ .color = orange };
-    cl.UI(&.{
-        .IDI("ToDoItem", @intCast(index)),
-        .layout(sidebar_item_layout),
-        .rectangle(rectangle_data),
+    clay.ui()(.{
+        .id = clay.idi("ToDoItem", @intCast(index)),
+        .layout = sidebar_item_layout,
+        .rectangle = rectangle_data,
     })({
-        cl.onHover(ClickData, &hover_data, HandleToDoButtonInteraction);
-        cl.text(toDo.task, .text(textConfig));
+        clay.onHover(ClickData, &hover_data, HandleToDoButtonInteraction);
+        clay.text(toDo.task, textConfig);
     });
 }
 
 fn buttonComponent(text: StaticString) void {
-    cl.UI(&.{
-        .ID("Button"),
-        .layout(sidebar_item_layout),
-        .rectangle(.{ .color = green }),
+    clay.ui()(.{
+        .id = clay.id("Button"),
+        .layout = sidebar_item_layout,
+        .rectangle = .{ .color = green },
     })({
-        cl.text(text, .text(textConfig));
+        clay.text(text, textConfig);
     });
 }
 
-pub fn createLayout(toDos: []ToDo) cl.ClayArray(cl.RenderCommand) {
-    cl.beginLayout();
-    cl.UI(&.{
-        .ID("OuterContainer"),
-        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
-        .rectangle(.{ .color = white }),
+pub fn createLayout(toDos: []ToDo) []clay.RenderCommand {
+    clay.beginLayout();
+    clay.ui()(.{
+        .id = clay.id("OuterContainer"),
+        .layout = .{
+            .layout_direction = .left_to_right,
+            .sizing = .{ .width = clay.Element.Sizing.Axis.grow(.{}), .height = clay.Element.Sizing.Axis.grow(.{}) },
+            .padding = clay.Padding.all(16),
+            .child_gap = 16,
+        },
+        .rectangle = .{ .color = white },
     })({
-        cl.UI(&.{
-            .ID("ToDos"),
-            .scroll(.{
+        clay.ui()(.{
+            .id = clay.id("ToDos"),
+            .scroll = .{
                 .vertical = true,
-            }),
-            .layout(.{
-                .direction = .TOP_TO_BOTTOM,
-                .sizing = .{ .h = .grow, .w = .grow },
-                .padding = .all(16),
-                .child_alignment = .{ .x = .CENTER, .y = .TOP },
+            },
+            .layout = .{
+                .layout_direction = .top_to_bottom,
+                .sizing = .{ .height = clay.Element.Sizing.Axis.grow(.{}), .width = clay.Element.Sizing.Axis.grow(.{}) },
+                .padding = clay.Padding.all(16),
+                .child_alignment = .{ .x = .center, .y = .top },
                 .child_gap = 16,
-            }),
-            .rectangle(.{ .color = light_grey }),
+            },
+            .rectangle = .{ .color = light_grey },
         })({
-            cl.UI(&.{
-                .ID("Header Outer"),
-                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
-                .rectangle(.{ .color = red }),
+            clay.ui()(.{
+                .id = clay.id("Header Outer"),
+                .layout = .{ .sizing = .{ .width = clay.Element.Sizing.Axis.grow(.{}) }, .padding = clay.Padding.all(16), .child_alignment = .{ .x = .left, .y = .center }, .child_gap = 16 },
+                .rectangle = .{ .color = red },
             })({
-                cl.text("To-Do List Application", .text(textConfig));
+                clay.text("To-Do List Application", textConfig);
             });
 
             for (toDos, 0..) |elem, i| toDoItemComponent(i, elem, toDos);
 
-            cl.UI(&.{.layout(.{ .sizing = .{ .h = .grow } })})({});
+            clay.ui()(.{ .layout = .{ .sizing = .{ .height = clay.Element.Sizing.Axis.grow(.{}) } } })({});
             buttonComponent("Add New To-Do");
         });
     });
-    return cl.endLayout();
+    return clay.endLayout();
 }
 
 pub fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {

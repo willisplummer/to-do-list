@@ -1,9 +1,10 @@
 const std = @import("std");
 const rl = @import("raylib");
-const cl = @import("zclay");
+// const cl = @import("zclay");
 const math = std.math;
+const clay = @import("clay");
 
-pub fn clayColorToRaylibColor(color: cl.Color) rl.Color {
+pub fn clayColorToRaylibColor(color: clay.Color) rl.Color {
     return rl.Color{
         .r = @intFromFloat(color[0]),
         .g = @intFromFloat(color[1]),
@@ -14,10 +15,10 @@ pub fn clayColorToRaylibColor(color: cl.Color) rl.Color {
 
 pub var raylib_fonts: [10]?rl.Font = .{null} ** 10;
 
-pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), allocator: std.mem.Allocator) void {
+pub fn clayRaylibRender(render_commands: *clay.ClayArray(clay.RenderCommand), allocator: std.mem.Allocator) void {
     var i: usize = 0;
     while (i < render_commands.length) : (i += 1) {
-        const render_command = cl.renderCommandArrayGet(render_commands, @intCast(i));
+        const render_command = clay.renderCommandArrayGet(render_commands, @intCast(i));
         const bounding_box = render_command.bounding_box;
         switch (render_command.command_type) {
             .none => {},
@@ -185,7 +186,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
     }
 }
 
-pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dimensions {
+pub fn measureText(clay_text: []const u8, config: *clay.TextElementConfig) clay.Dimensions {
     const font = raylib_fonts[config.font_id].?;
     const text: []const u8 = clay_text;
     const font_size: f32 = @floatFromInt(config.font_size);
@@ -225,7 +226,7 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
 
     if (temp_text_width < text_width) temp_text_width = text_width;
 
-    return cl.Dimensions{
+    return clay.Dimensions{
         .h = text_height,
         .w = temp_text_width * scale_factor + (@as(f32, @floatFromInt(temp_byte_counter)) - 1) * letter_spacing,
     };
