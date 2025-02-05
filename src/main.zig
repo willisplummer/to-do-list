@@ -11,9 +11,6 @@ const font_id_body_16 = 1;
 var reinitialize_clay = false;
 var debug_enabled = false;
 
-const ColorOrange = clay.Color{ .r = 225, .g = 138, .b = 50 };
-const ColorBlue = clay.Color{ .r = 111, .g = 173, .b = 162 };
-
 const ScrollbarData = struct {
     click_origin: clay.Vector2,
     position_origin: clay.Vector2,

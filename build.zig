@@ -32,6 +32,21 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
+
+    // enables build on save type checking
+    const exe_check = b.addExecutable(.{
+        .name = "todolist",
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    exe_check.root_module.addImport("raylib", clay.module("raylib"));
+    exe_check.root_module.addImport("clay", clay.module("clay"));
+
+    const check = b.step("check", "Check if foo compiles");
+    check.dependOn(&exe_check.step);
+
     // const lib_unit_tests = b.addTest(.{
     //     .root_source_file = b.path("src/root.zig"),
     //     .target = target,
